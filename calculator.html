@@ -1,37 +1,168 @@
-<div class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-2 z-50">
-    <div class="max-w-md mx-auto flex justify-around items-center text-xs text-slate-400">
-        <button onclick="scrollToSection('info')" class="flex flex-col items-center hover:text-blue-400">
-            <span class="text-xl mb-1">📝</span>
-            ข้อมูล
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolt Land Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #0b0f1a; color: #e2e8f0; padding-bottom: 80px; }
+        .card { background-color: #161c2d; border: 1px solid #1e293b; }
+        input { background-color: #0b0f1a !important; border: 1px solid #334155 !important; color: white !important; }
+        .nav-active { color: #3b82f6; border-top: 2px solid #3b82f6; }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="max-w-xl mx-auto">
+        <div id="info-section" class="mb-6">
+            <div class="flex items-center mb-4 bg-blue-600 p-4 rounded-lg shadow-lg">
+                <h1 class="text-xl font-bold text-white">🏢 คำนวณค่าเช่าที่ดิน</h1>
+            </div>
+
+            <div class="card p-5 rounded-xl shadow-xl space-y-4">
+                <h2 class="text-blue-400 font-medium border-b border-slate-700 pb-2">ข้อมูลโครงการ</h2>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">ชื่อสาขา / โครงการ</label>
+                    <input type="text" id="branchName" class="w-full p-3 rounded-lg" placeholder="ระบุชื่อสาขา...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">กว้าง (เมตร)</label>
+                        <input type="number" id="width" class="w-full p-3 rounded-lg text-center" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ลึก (เมตร)</label>
+                        <input type="number" id="depth" class="w-full p-3 rounded-lg text-center" value="0">
+                    </div>
+                </div>
+
+                <h2 class="text-blue-400 font-medium border-b border-slate-700 pb-2 pt-2">เงื่อนไขค่าเช่า</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">ค่าเช่าเริ่มต้น (บาท/เดือน)</label>
+                        <input type="number" id="monthlyRent" class="w-full p-3 rounded-lg" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ปรับขึ้น (%)</label>
+                        <input type="number" id="adjustPercent" class="w-full p-3 rounded-lg text-center" value="3">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">ปรับทุกๆ (ปี)</label>
+                        <input type="number" id="adjustYear" class="w-full p-3 rounded-lg text-center" value="3">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">ระยะเวลาสัญญา (ปี)</label>
+                        <input type="number" id="totalYears" class="w-full p-3 rounded-lg" value="9">
+                    </div>
+                </div>
+
+                <button onclick="calculateRent()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl mt-4 transition-all active:scale-95">
+                    คำนวณผลลัพธ์
+                </button>
+            </div>
+        </div>
+
+        <div id="summary-section" class="mt-8 hidden">
+            <div class="card p-5 rounded-xl border-l-4 border-blue-500">
+                <h2 class="text-lg font-bold mb-4 text-blue-300">📊 สรุปภาพรวม</h2>
+                <div id="summaryContent" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="table-section" class="mt-8 hidden">
+            <div class="card p-5 rounded-xl">
+                <h2 class="text-lg font-bold mb-4 text-blue-300">📅 ตารางรายปี</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-slate-500 border-b border-slate-700">
+                            <tr>
+                                <th class="pb-2 text-left">ปีที่</th>
+                                <th class="pb-2 text-right">ค่าเช่า/เดือน</th>
+                                <th class="pb-2 text-right">รวมรายปี</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="npv-section" class="mt-8 hidden pb-20">
+            <div class="card p-5 rounded-xl border-l-4 border-green-500 text-center">
+                <h2 class="text-lg font-bold mb-2 text-green-400">🔢 มูลค่าปัจจุบัน (NPV)</h2>
+                <p class="text-sm text-slate-400 mb-4">(ใช้อัตราคิดลด 5% ต่อปี)</p>
+                <div id="npvValue" class="text-3xl font-bold text-white"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-[#161c2d] border-t border-slate-800 flex justify-around p-2 z-50 shadow-2xl">
+        <button onclick="navTo('info')" class="flex flex-col items-center p-2 text-xs text-blue-400">
+            <span class="text-xl">📝</span><span>ข้อมูล</span>
         </button>
-        <button onclick="scrollToSection('summary')" class="flex flex-col items-center hover:text-blue-400">
-            <span class="text-xl mb-1">📊</span>
-            สรุป
+        <button onclick="navTo('summary')" class="flex flex-col items-center p-2 text-xs text-slate-500 hover:text-blue-400">
+            <span class="text-xl">📊</span><span>สรุป</span>
         </button>
-        <button onclick="scrollToSection('table')" class="flex flex-col items-center hover:text-blue-400">
-            <span class="text-xl mb-1">📅</span>
-            ตาราง
+        <button onclick="navTo('table')" class="flex flex-col items-center p-2 text-xs text-slate-500 hover:text-blue-400">
+            <span class="text-xl">📅</span><span>ตาราง</span>
         </button>
-        <button onclick="scrollToSection('npv')" class="flex flex-col items-center hover:text-blue-400">
-            <span class="text-xl mb-1">🔢</span>
-            NPV
+        <button onclick="navTo('npv')" class="flex flex-col items-center p-2 text-xs text-slate-500 hover:text-blue-400">
+            <span class="text-xl">🔢</span><span>NPV</span>
         </button>
     </div>
-</div>
 
-<script>
-    // 2. เพิ่มฟังก์ชันเลื่อนหน้าจอ (Smooth Scroll)
-    function scrollToSection(id) {
-        let section = '';
-        if(id === 'info') section = 'branchName'; // เลื่อนไปจุดกรอกข้อมูล
-        if(id === 'summary') section = 'resultArea'; // เลื่อนไปจุดสรุปผล
-        if(id === 'table') section = 'detailTableBody'; // เลื่อนไปดูตาราง
-        
-        const el = document.getElementById(section);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-            alert('กรุณากด "คำนวณผลลัพธ์" ก่อนดูส่วนนี้ครับ');
+    <script>
+        function calculateRent() {
+            const rent = parseFloat(document.getElementById('monthlyRent').value) || 0;
+            const percent = parseFloat(document.getElementById('adjustPercent').value) || 0;
+            const step = parseInt(document.getElementById('adjustYear').value) || 1;
+            const totalY = parseInt(document.getElementById('totalYears').value) || 1;
+            const discountRate = 0.05; // 5%
+
+            let currentRent = rent;
+            let totalSum = 0;
+            let npvSum = 0;
+            let tableHTML = '';
+
+            for (let i = 1; i <= totalY; i++) {
+                if (i > 1 && (i - 1) % step === 0) {
+                    currentRent = currentRent * (1 + (percent / 100));
+                }
+                let yearly = currentRent * 12;
+                totalSum += yearly;
+                npvSum += yearly / Math.pow(1 + discountRate, i);
+
+                tableHTML += `<tr class="border-b border-slate-800/50">
+                    <td class="py-3">ปีที่ ${i}</td>
+                    <td class="py-3 text-right">${currentRent.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                    <td class="py-3 text-right text-blue-400 font-medium">${yearly.toLocaleString()}</td>
+                </tr>`;
+            }
+
+            document.getElementById('summaryContent').innerHTML = `
+                <div class="flex justify-between"><span class="text-slate-400 text-sm">รวมค่าเช่าทั้งหมด:</span><span class="font-bold text-white">${totalSum.toLocaleString()} บาท</span></div>
+                <div class="flex justify-between"><span class="text-slate-400 text-sm">เฉลี่ยรายเดือน:</span><span class="font-bold text-white">${(totalSum/(totalY*12)).toLocaleString()} บาท</span></div>
+            `;
+            document.getElementById('tableBody').innerHTML = tableHTML;
+            document.getElementById('npvValue').innerText = npvSum.toLocaleString(undefined, {maximumFractionDigits:0}) + " บาท";
+
+            // Show sections
+            ['summary-section', 'table-section', 'npv-section'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            navTo('summary'); // Jump to summary
         }
-    }
-</script>
+
+        function navTo(id) {
+            const el = document.getElementById(id + '-section');
+            if (el && !el.classList.contains('hidden')) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (id !== 'info') {
+                alert('กรุณากรอกข้อมูลและกดปุ่มคำนวณก่อนครับ');
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>
