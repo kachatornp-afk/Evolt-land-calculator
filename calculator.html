@@ -1,0 +1,37 @@
+<div class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-2 z-50">
+    <div class="max-w-md mx-auto flex justify-around items-center text-xs text-slate-400">
+        <button onclick="scrollToSection('info')" class="flex flex-col items-center hover:text-blue-400">
+            <span class="text-xl mb-1">📝</span>
+            ข้อมูล
+        </button>
+        <button onclick="scrollToSection('summary')" class="flex flex-col items-center hover:text-blue-400">
+            <span class="text-xl mb-1">📊</span>
+            สรุป
+        </button>
+        <button onclick="scrollToSection('table')" class="flex flex-col items-center hover:text-blue-400">
+            <span class="text-xl mb-1">📅</span>
+            ตาราง
+        </button>
+        <button onclick="scrollToSection('npv')" class="flex flex-col items-center hover:text-blue-400">
+            <span class="text-xl mb-1">🔢</span>
+            NPV
+        </button>
+    </div>
+</div>
+
+<script>
+    // 2. เพิ่มฟังก์ชันเลื่อนหน้าจอ (Smooth Scroll)
+    function scrollToSection(id) {
+        let section = '';
+        if(id === 'info') section = 'branchName'; // เลื่อนไปจุดกรอกข้อมูล
+        if(id === 'summary') section = 'resultArea'; // เลื่อนไปจุดสรุปผล
+        if(id === 'table') section = 'detailTableBody'; // เลื่อนไปดูตาราง
+        
+        const el = document.getElementById(section);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            alert('กรุณากด "คำนวณผลลัพธ์" ก่อนดูส่วนนี้ครับ');
+        }
+    }
+</script>
